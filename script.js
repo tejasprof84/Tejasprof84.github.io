@@ -605,7 +605,7 @@
     camera.position.set(Math.sin(th) * Math.cos(ph) * dist, Math.sin(ph) * dist, Math.cos(th) * Math.cos(ph) * dist);
     // on wide screens shift the network right so the name has room
     camera.lookAt(0, 0, 0);
-    if (wide) { camera.setViewOffset(canvas.clientWidth, canvas.clientHeight, -canvas.clientWidth * .3, -canvas.clientHeight * .02 - sp * 80, canvas.clientWidth, canvas.clientHeight); }
+    if (wide) { camera.setViewOffset(canvas.clientWidth, canvas.clientHeight, -canvas.clientWidth * .33, -canvas.clientHeight * .02 - sp * 80, canvas.clientWidth, canvas.clientHeight); }
     else { camera.setViewOffset(canvas.clientWidth, canvas.clientHeight, 0, canvas.clientHeight * .18, canvas.clientWidth, canvas.clientHeight); }
     renderer.render(scene, camera);
     // project labels under each layer

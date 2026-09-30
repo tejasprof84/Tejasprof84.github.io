@@ -1,210 +1,346 @@
 <!DOCTYPE html>
+<!--
+  TEJAS KUMAR S — AI/ML ENGINEER PORTFOLIO
+  Vanilla HTML / CSS / JS + Three.js (hero only). No build step — deploys as-is on GitHub Pages.
+
+  SYSTEMS
+   · Neural field      — full-page canvas lattice: spring physics, cursor warp, synapse pulses, click shockwaves
+   · 3D network hero   — Three.js MLP (6-10-10-8-4) running animated forward passes; drag to orbit
+   · Skill sphere      — true CSS-3D tag cloud, inertia rotation from the pointer
+   · Ask-my-portfolio  — real TF-IDF retrieval + cosine-distance map, computed in the browser
+   · Kinetic cursor, magnetic buttons, 3D tilt cards, scramble headings, scroll progress
+-->
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Tejas Kumar - AI/ML Engineer portfolio">
-  <title>Tejas Kumar | AI/ML Engineer</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tejas Kumar S — AI/ML Engineer</title>
+<meta name="description" content="Tejas Kumar S — AI/ML Engineer in Bengaluru building RAG pipelines, agentic AI and computer vision systems. AI Engineer Intern at Datamites.">
+<meta name="theme-color" content="#07061a">
+<meta property="og:title" content="Tejas Kumar S — AI/ML Engineer">
+<meta property="og:description" content="RAG · Agentic AI · Computer Vision · Deep Learning">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="navbar">
-    <a href="#home" class="logo">TK<span>.</span></a>
-    <button class="menu-btn" aria-label="Open menu">☰</button>
-    <nav>
-      <a href="#about">About</a>
-      <a href="#skills">Skills</a>
-      <a href="#projects">Projects</a>
-      <a href="#experience">Experience</a>
-      <a href="#education">Education</a>
-      <a href="#contact">Contact</a>
-    </nav>
-  </header>
 
-  <main>
-    <section id="home" class="hero">
-      <div class="hero-grid"></div>
-      <div class="hero-content">
-        <p class="eyebrow">AI/ML ENGINEER</p>
-        <h1>Building practical<br><span>AI solutions.</span></h1>
-        <p class="hero-text">
-          Computer Vision • Generative AI & RAG • Deep Learning
-        </p>
-        <p class="hero-description">
-          AI/ML Engineer with hands-on experience building transfer-learning
-          image classifiers and end-to-end RAG pipelines.
-        </p>
-        <div class="hero-actions">
-          <a class="btn primary" href="#projects">View Projects</a>
-          <a class="btn secondary" href="Tejas_kumar_resume_v8-1.pdf" download>Download Resume</a>
-        </div>
-        <div class="socials">
-          <a href="https://www.linkedin.com/in/tejas-kumar-tech" target="_blank">LinkedIn ↗</a>
-          <a href="https://github.com/Tejasprof84" target="_blank">GitHub ↗</a>
-          <a href="mailto:tejasprof84@gmail.com">Email ↗</a>
-        </div>
-      </div>
-      <div class="hero-card">
-        <div class="terminal">
-          <div class="terminal-top"><span></span><span></span><span></span></div>
-          <div class="terminal-body">
-            <p><span class="muted">$</span> whoami</p>
-            <p class="green">tejas_kumar</p>
-            <p><span class="muted">$</span> focus</p>
-            <p>AI/ML · RAG · Computer Vision</p>
-            <p><span class="muted">$</span> build --mode</p>
-            <p class="green">production-minded</p>
-            <p><span class="muted">$</span> status</p>
-            <p class="status">● Open to AI/ML opportunities</p>
-          </div>
-        </div>
-      </div>
-    </section>
+<!-- ═══ Loader: "loading model weights" ═══ -->
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader__box">
+    <div class="loader__net" id="ldNet"></div>
+    <div class="loader__bar"><i id="ldBar"></i></div>
+    <div class="loader__row"><span id="ldMsg">loading weights…</span><span class="loader__n" id="ldN">00</span></div>
+  </div>
+</div>
 
-    <section id="about" class="section">
-      <div class="section-label">01 / ABOUT</div>
-      <div class="about-grid">
+<canvas id="field" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor-ring" aria-hidden="true"></div>
+<div class="cursor-dot" aria-hidden="true"></div>
+
+<!-- ═══ HUD ═══ -->
+<nav class="hud" aria-label="Primary">
+  <a href="#top" class="hud__id" data-snap><i class="hud__pulse"></i>TK<b>.</b>AI</a>
+  <ul class="hud__links" id="hudLinks">
+    <li><a href="#about" data-snap><span>01</span>About</a></li>
+    <li><a href="#skills" data-snap><span>02</span>Skills</a></li>
+    <li><a href="#ask" data-snap><span>03</span>Ask&nbsp;AI</a></li>
+    <li><a href="#projects" data-snap><span>04</span>Projects</a></li>
+    <li><a href="#experience" data-snap><span>05</span>Journey</a></li>
+    <li><a href="#contact" data-snap><span>06</span>Contact</a></li>
+  </ul>
+  <div class="hud__right">
+    <span class="hud__time" id="clock">--:--:-- IST</span>
+    <button class="theme-toggle" id="themeToggle" data-snap aria-label="Switch colour theme"><span class="theme-toggle__track"><span class="theme-toggle__knob"></span></span><span id="themeLabel">Dark</span></button>
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false"><i></i><i></i></button>
+  </div>
+  <i class="hud__progress" id="hudProgress" aria-hidden="true"></i>
+</nav>
+
+<main id="top">
+  <!-- ════════════ HERO — 3D neural network ════════════ -->
+  <section class="hero" id="hero">
+    <canvas id="netCanvas" aria-hidden="true"></canvas>
+    <div class="hero__labels" id="netLabels" aria-hidden="true"></div>
+    <div class="wrap hero__inner">
+      <div class="hero__meta"><span><b>●</b> Open to AI/ML roles</span><span>Bengaluru, India</span><span>AI Engineer Intern @ Datamites</span></div>
+      <h1 class="hero__name" aria-label="Tejas Kumar S"><span data-split>Tejas</span><span class="outline" data-split>Kumar&nbsp;S</span></h1>
+      <p class="hero__role"><span class="mono acc">&gt;</span> <span id="typed" class="mono"></span><span class="caret"></span></p>
+      <p class="hero__lede">I build <strong>grounded AI systems</strong> — retrieval pipelines that cite their sources, vision models evaluated on the metrics that matter, and deployments real users can touch.</p>
+      <div class="hero__cta">
+        <a href="#projects" class="btn btn--solid" data-magnetic data-snap><span class="btn__label">View projects</span><span class="btn__arrow">→</span></a>
+        <a href="Tejas_kumar_resume_v8-1.pdf" class="btn" download data-magnetic data-snap><span class="btn__label">Download résumé</span><span class="btn__arrow">↓</span></a>
+      </div>
+      <div class="hero__socials">
+        <a href="https://github.com/Tejasprof84" target="_blank" rel="noopener" data-snap>GitHub ↗</a>
+        <a href="https://www.linkedin.com/in/tejas-kumar-tech" target="_blank" rel="noopener" data-snap>LinkedIn ↗</a>
+        <a href="mailto:tejasprof84@gmail.com" data-snap>Email ↗</a>
+        <a href="https://hub.docker.com/r/tejas8484/catdog" target="_blank" rel="noopener" data-snap>Docker Hub ↗</a>
+      </div>
+    </div>
+    <aside class="hero__panel pane" aria-hidden="true">
+      <div class="hero__panel-top mono"><span>MLP · 6-10-10-8-4</span><span id="netStat" class="acc">● FORWARD PASS</span></div>
+      <div class="hero__panel-row mono"><span>epoch</span><b id="netEpoch">001</b></div>
+      <div class="hero__panel-row mono"><span>loss</span><b id="netLoss">0.693</b></div>
+      <svg class="hero__spark" viewBox="0 0 200 44" preserveAspectRatio="none"><polyline id="netSpark" fill="none" stroke="currentColor" stroke-width="1.6" points=""/></svg>
+      <p class="mono hero__hint">⟲ drag to orbit · click to fire</p>
+    </aside>
+    <div class="scroll-cue mono"><i></i>scroll</div>
+  </section>
+
+  <div class="ticker" aria-hidden="true"><div class="ticker__track" id="tickerTrack">
+    <span>LangChain</span><span>LangGraph</span><span>RAG</span><span>Pinecone</span><span>FAISS</span><span>MCP</span><span>YOLO11</span><span>PyTorch</span><span>TensorFlow</span><span>OpenCV</span><span>Hugging Face</span><span>FastAPI</span><span>Docker</span><span>Streamlit</span><span>scikit-learn</span><span>XGBoost</span>
+  </div></div>
+
+  <!-- ════════════ ABOUT ════════════ -->
+  <section id="about">
+    <div class="wrap">
+      <p class="eyebrow" data-scramble>01 / About</p>
+      <div class="about">
         <div>
-          <h2>Turning AI concepts into <span>working systems.</span></h2>
+          <h2 class="h-section" data-scramble-block>Turning AI concepts<br>into <em>working</em> systems.</h2>
+          <div class="about__text" data-reveal>
+            <p>I'm <strong>Tejas Kumar S</strong>, an AI/ML engineer in Bengaluru. I'm an <strong>AI Engineer Intern at Datamites</strong>, where I designed and deployed a RAG-based document search and Q&amp;A system with LangChain, Pinecone and FAISS.</p>
+            <p>I work end to end — preprocessing, feature engineering, training, <strong>honest evaluation</strong> (precision, recall, F1, ROC-AUC, false-negative rate) and deployment with FastAPI, Streamlit and Docker. Right now I'm going deeper into <strong>LangGraph multi-agent systems, MCP</strong> and detection metrics like IoU, NMS and mAP.</p>
+          </div>
         </div>
-        <div>
-          <p>
-            I’m Tejas Kumar, an AI/ML Engineer with hands-on experience in
-            computer vision and generative AI. I’m currently strengthening
-            this foundation as an AI Engineer Intern at Datamites.
-          </p>
-          <p>
-            My work includes transfer-learning image classifiers and
-            end-to-end Retrieval-Augmented Generation pipelines using
-            LangChain, Pinecone and FastAPI.
-          </p>
+        <div class="cube-stage" data-reveal aria-hidden="true">
+          <div class="cube" id="cube">
+            <div class="cube__f f1"><b>TK</b><span>AI / ML</span></div>
+            <div class="cube__f f2"><b>RAG</b><span>grounded answers</span></div>
+            <div class="cube__f f3"><b>CV</b><span>YOLO · CNNs</span></div>
+            <div class="cube__f f4"><b>LLM</b><span>agents · MCP</span></div>
+            <div class="cube__f f5"><b>DL</b><span>transfer learning</span></div>
+            <div class="cube__f f6"><b>OPS</b><span>FastAPI · Docker</span></div>
+          </div>
+          <div class="cube-shadow"></div>
         </div>
       </div>
-    </section>
-
-    <section id="skills" class="section dark-section">
-      <div class="section-label">02 / SKILLS</div>
-      <h2>Technical toolkit</h2>
-      <div class="skills-grid">
-        <div class="skill-card"><h3>Generative AI</h3><p>LangChain · LangGraph · Prompt Engineering · Embeddings · MCP · Agentic AI</p></div>
-        <div class="skill-card"><h3>RAG & Vector Search</h3><p>RAG · Pinecone · FAISS · Vector Databases · Semantic Search</p></div>
-        <div class="skill-card"><h3>Computer Vision</h3><p>YOLO · VGG16 · ResNet50 · EfficientNet-B0 · MobileNetV2 · OpenCV</p></div>
-        <div class="skill-card"><h3>Deep Learning</h3><p>Transfer Learning · Fine-Tuning · CNN · ANN · TensorFlow · Keras</p></div>
-        <div class="skill-card"><h3>Machine Learning</h3><p>Regression · Decision Trees · Random Forest · SVM · KNN · Naive Bayes · XGBoost</p></div>
-        <div class="skill-card"><h3>Engineering & APIs</h3><p>Python · SQL · FastAPI · REST APIs · Docker · Linux/WSL2 · Git/GitHub</p></div>
-        <div class="skill-card"><h3>Data & Frameworks</h3><p>Scikit-learn · Pandas · NumPy · Streamlit</p></div>
-        <div class="skill-card"><h3>DevOps & Observability</h3><p>Docker Compose · Prometheus · Monitoring · Observability · Microservices</p></div>
+      <div class="stats" data-reveal>
+        <div class="stat"><div class="stat__n" data-count="10">0<sup>+</sup></div><div class="stat__l">ML / AI projects built</div></div>
+        <div class="stat"><div class="stat__n" data-count="3">0</div><div class="stat__l">Live demos you can open</div></div>
+        <div class="stat"><div class="stat__n" data-count="8.3" data-dec="1">0</div><div class="stat__l">B.E. CS · CGPA</div></div>
+        <div class="stat"><div class="stat__n" data-count="5">0</div><div class="stat__l">Domains · ML DL NLP CV GenAI</div></div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section id="projects" class="section">
-      <div class="section-label">03 / PROJECTS</div>
-      <div class="section-heading">
-        <h2>Selected work</h2>
-        <p>Projects focused on practical AI/ML engineering.</p>
+  <!-- ════════════ SKILLS — CSS-3D sphere ════════════ -->
+  <section id="skills">
+    <div class="wrap">
+      <p class="eyebrow" data-scramble>02 / Skills</p>
+      <h2 class="h-section" data-scramble-block>A toolkit in <em>orbit</em>.</h2>
+      <div class="skills">
+        <div class="sphere-stage" id="sphereStage" aria-label="Rotating 3D sphere of skills">
+          <div class="sphere" id="sphere"></div>
+          <div class="sphere-core" aria-hidden="true"></div>
+        </div>
+        <div class="skill-list" id="skillList">
+          <button class="skill-cat is-on" data-cat="genai" data-snap><span>A</span><div><b>Generative AI</b><small>LangChain · LangGraph · MCP · Prompting · Embeddings · Agents</small></div></button>
+          <button class="skill-cat" data-cat="rag" data-snap><span>B</span><div><b>RAG &amp; Vector Search</b><small>Pinecone · FAISS · Semantic search · OCR</small></div></button>
+          <button class="skill-cat" data-cat="cv" data-snap><span>C</span><div><b>Computer Vision &amp; DL</b><small>YOLO11 · ResNet50 · EfficientNet · MobileNetV2 · VGG16 · OpenCV</small></div></button>
+          <button class="skill-cat" data-cat="ml" data-snap><span>D</span><div><b>Machine Learning</b><small>scikit-learn · XGBoost · Random Forest · SVM · Pandas · NumPy</small></div></button>
+          <button class="skill-cat" data-cat="ops" data-snap><span>E</span><div><b>Deploy &amp; MLOps</b><small>FastAPI · Streamlit · Docker · REST · Prometheus · Linux</small></div></button>
+        </div>
       </div>
-      <div class="projects-grid">
-        <article class="project featured">
-          <div class="project-number">01</div>
-          <div class="project-content">
-            <p class="project-type">GENERATIVE AI · RAG</p>
-            <h3>Intelligent RAG-Based Chatbot</h3>
-            <p>End-to-end RAG pipeline that ingests PDFs, CSVs and live web content, then retrieves grounded context for a Groq-hosted LLM through LangChain.</p>
-            <div class="tags"><span>Python</span><span>LangChain</span><span>Pinecone</span><span>Groq</span><span>Streamlit</span></div>
-            <a class="project-link" href="https://github.com/Tejasprof84" target="_blank">GitHub profile ↗</a>
+    </div>
+  </section>
+
+  <!-- ════════════ ASK MY PORTFOLIO — in-browser retrieval ════════════ -->
+  <section id="ask">
+    <div class="wrap">
+      <p class="eyebrow" data-scramble>03 / Ask AI</p>
+      <h2 class="h-section" data-scramble-block>Ask my <em>portfolio</em>.</h2>
+      <p class="lede" data-reveal>A tiny retrieval engine running in your browser: your question and 13 facts about me are turned into TF-IDF vectors, ranked by cosine similarity, and laid out in 2D by cosine distance (MDS). No LLM, no server — just the <strong>retrieval half of RAG</strong>, made visible.</p>
+      <div class="ask pane" data-reveal>
+        <div class="ask__left">
+          <form class="ask__form" id="askForm" autocomplete="off">
+            <span class="mono acc">?</span>
+            <input id="askInput" type="text" placeholder="e.g. What RAG projects has he built?" aria-label="Ask a question about Tejas">
+            <button class="btn btn--solid btn--sm" type="submit" data-snap><span class="btn__label">Retrieve</span></button>
+          </form>
+          <div class="ask__chips" id="askChips"></div>
+          <div class="ask__answer">
+            <div class="ask__answer-top mono"><span>answer · extractive</span><span id="askMeta">—</span></div>
+            <p id="askAnswer">Pick a question or type your own.</p>
+          </div>
+          <ol class="ask__hits" id="askHits"></ol>
+        </div>
+        <div class="ask__map">
+          <canvas id="askCanvas" aria-label="2D embedding map of the knowledge base"></canvas>
+          <span class="stage-tag tl mono"><b>●</b> TF-IDF · cosine MDS · 2-d</span>
+          <span class="stage-tag br mono">◆ query &nbsp; ● chunk</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════ PROJECTS ════════════ -->
+  <section id="projects">
+    <div class="wrap">
+      <p class="eyebrow" data-scramble>04 / Projects</p>
+      <h2 class="h-section" data-scramble-block>Selected <em>work</em>.</h2>
+
+      <figure class="wide-visual pane" data-reveal>
+        <img src="assets/rag-pipeline.svg" alt="Isometric RAG pipeline: ingest, chunk, embed, index, generate, answer" loading="lazy">
+      </figure>
+
+      <div class="projects" id="projectGrid">
+        <article class="proj pane" data-tilt data-snap="frame">
+          <div class="proj__viz viz-rag" aria-hidden="true"><svg viewBox="0 0 300 150"><g class="docs"><rect x="30" y="40" width="46" height="60" rx="4"/><rect x="38" y="32" width="46" height="60" rx="4"/><rect x="46" y="24" width="46" height="60" rx="4"/></g><g class="chunks"><rect x="130" y="30" width="36" height="14" rx="3"/><rect x="130" y="52" width="36" height="14" rx="3"/><rect x="130" y="74" width="36" height="14" rx="3"/><rect x="130" y="96" width="36" height="14" rx="3"/></g><g class="db"><ellipse cx="240" cy="42" rx="30" ry="10"/><path d="M210 42 v60 a30 10 0 0 0 60 0 v-60"/><ellipse class="ring" cx="240" cy="72" rx="30" ry="10"/></g><path class="flow" d="M94 60 H128 M168 70 H208"/></svg></div>
+          <div class="proj__body">
+            <p class="proj__type mono">01 · Generative AI · RAG</p>
+            <h3>Intelligent RAG Chatbot</h3>
+            <p>Ingests <b>PDFs, CSVs and live web pages</b>, indexes embeddings in Pinecone and answers with a Groq-hosted LLM through LangChain — streaming chat, session analytics and source-grounded answers.</p>
+            <div class="tags"><span>LangChain</span><span>Pinecone</span><span>Groq</span><span>Streamlit</span></div>
+            <div class="proj__links"><a href="https://github.com/Tejasprof84/datamites-rag-chatbot" target="_blank" rel="noopener" data-snap>Code ↗</a><a class="live" href="https://smart-rag.streamlit.app/" target="_blank" rel="noopener" data-snap>Live demo ↗</a></div>
           </div>
         </article>
 
-        <article class="project">
-          <div class="project-number">02</div>
-          <div class="project-content">
-            <p class="project-type">COMPUTER VISION · DEEP LEARNING</p>
-            <h3>Chest X-Ray Pneumonia Classification</h3>
-            <p>Transfer-learning approach comparing MobileNetV2, EfficientNet-B0 and ResNet50, with evaluation focused on precision, recall and false-negative rate.</p>
-            <div class="tags"><span>TensorFlow</span><span>Keras</span><span>OpenCV</span><span>Transfer Learning</span></div>
-            <a class="project-link" href="https://github.com/Tejasprof84" target="_blank">GitHub profile ↗</a>
+        <article class="proj pane" data-tilt data-snap="frame">
+          <div class="proj__viz viz-roc" aria-hidden="true"><svg viewBox="0 0 300 150"><g class="axes"><path d="M40 125 H270 M40 125 V15"/></g><path class="diag" d="M40 125 L270 15"/><path class="curve" d="M40 125 C 50 40, 90 24, 270 15"/><text x="200" y="112" class="mono">ROC-AUC</text><circle class="pt" cx="78" cy="36" r="4"/><text x="86" y="52" class="mono small">recall ↑ · FN ↓</text></svg></div>
+          <div class="proj__body">
+            <p class="proj__type mono">02 · Computer Vision · Healthcare</p>
+            <h3>Chest X-Ray Pneumonia Classifier</h3>
+            <p>Transfer learning across <b>MobileNetV2, EfficientNet-B0 and ResNet50</b>. Diagnosed and fixed majority-class collapse by optimising recall, F1 and false-negative rate — a missed diagnosis costs the most.</p>
+            <div class="tags"><span>TensorFlow</span><span>Keras</span><span>OpenCV</span><span>ROC-AUC</span></div>
+            <div class="proj__links"><a href="https://github.com/Tejasprof84/chest-xray-pneumonia-classifier" target="_blank" rel="noopener" data-snap>Code ↗</a><a class="live" href="https://chest-xray-pneumonia-classifier-m9wthzs4ank8kecsvswan8.streamlit.app/" target="_blank" rel="noopener" data-snap>Live demo ↗</a></div>
           </div>
         </article>
 
-        <article class="project">
-          <div class="project-number">03</div>
-          <div class="project-content">
-            <p class="project-type">BACKEND · MICROSERVICES</p>
-            <h3>AI-Powered Incident Response Platform</h3>
-            <p>Containerized microservices platform using FastAPI and Docker Compose to simulate realistic incident-response scenarios and validate inter-service communication.</p>
-            <div class="tags"><span>Python</span><span>FastAPI</span><span>Docker</span><span>REST APIs</span></div>
-            <a class="project-link" href="https://github.com/Tejasprof84" target="_blank">GitHub profile ↗</a>
+        <article class="proj pane" data-tilt data-snap="frame">
+          <div class="proj__viz viz-med" aria-hidden="true"><svg viewBox="0 0 300 150"><path class="ecg" d="M0 80 H70 L82 60 L94 110 L108 30 L120 95 L130 80 H300"/><g class="bubble"><rect x="178" y="22" width="100" height="40" rx="10"/><path d="M200 62 l-6 10 l14 -10"/><line x1="192" y1="36" x2="262" y2="36"/><line x1="192" y1="48" x2="240" y2="48"/></g><text x="186" y="104" class="mono small">grounded ✓</text></svg></div>
+          <div class="proj__body">
+            <p class="proj__type mono">03 · RAG · Healthcare</p>
+            <h3>Healthcare Chatbot (RAG)</h3>
+            <p>An AI medical assistant that answers health questions grounded in trusted medical documents — <b>FAISS</b> vector search with <b>Hugging Face</b> embeddings and an LLM via LangChain, cutting hallucinated answers.</p>
+            <div class="tags"><span>LangChain</span><span>FAISS</span><span>Hugging Face</span></div>
+            <div class="proj__links"><a href="https://github.com/Tejasprof84/healthcare-chatbot-rag" target="_blank" rel="noopener" data-snap>Code ↗</a></div>
           </div>
         </article>
 
-        <article class="project">
-          <div class="project-number">04</div>
-          <div class="project-content">
-            <p class="project-type">MACHINE LEARNING</p>
-            <h3>Flight Fare Prediction</h3>
-            <p>ML pipeline comparing Linear Regression, Decision Tree, Random Forest and XGBoost using R², MAE and RMSE with cross-validation.</p>
-            <div class="tags"><span>Python</span><span>Scikit-learn</span><span>XGBoost</span><span>Streamlit</span></div>
-            <a class="project-link" href="https://github.com/Tejasprof84" target="_blank">GitHub profile ↗</a>
+        <article class="proj pane" data-tilt data-snap="frame">
+          <div class="proj__viz viz-ops" aria-hidden="true"><div class="logs mono"><p><b class="e">ERR</b> payment-svc 503 upstream timeout</p><p><b class="w">WRN</b> p99 latency 2.4s ↑</p><p><b class="i">TRC</b> checkout → payment → db</p><p><b class="k">RCA</b> db pool exhausted → scale pool</p><p><b class="e">ERR</b> auth-svc token refresh fail</p><p><b class="i">MET</b> cpu 91% node-3</p><p><b class="k">FIX</b> restart + raise limits</p></div></div>
+          <div class="proj__body">
+            <p class="proj__type mono">04 · AIOps · Microservices</p>
+            <h3>Autonomous AI Incident Response</h3>
+            <p>Root-cause analysis platform that detects service failures, <b>correlates logs, metrics and traces</b>, and recommends remediation — containerised FastAPI microservices on Docker Compose.</p>
+            <div class="tags"><span>FastAPI</span><span>Docker</span><span>LLMs</span><span>Observability</span></div>
+            <div class="proj__links"><a href="https://github.com/Tejasprof84/autonomous-ai-incident-response" target="_blank" rel="noopener" data-snap>Code ↗</a></div>
+          </div>
+        </article>
+
+        <article class="proj pane" data-tilt data-snap="frame">
+          <div class="proj__viz viz-cnn" aria-hidden="true"><div class="fmaps"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="cnn-out mono"><span>cat <b>0.97</b></span><span>dog <b>0.03</b></span></div></div>
+          <div class="proj__body">
+            <p class="proj__type mono">05 · Deep Learning · Deploy</p>
+            <h3>Cat vs Dog — Transfer Learning</h3>
+            <p>A reusable <b>model factory</b> (MobileNetV2 / EfficientNet-B0 / ResNet50) with corrupted-file handling, an error-analysis visualiser, a Streamlit app and a <b>Docker Hub</b> image.</p>
+            <div class="tags"><span>TensorFlow</span><span>Docker</span><span>Streamlit</span></div>
+            <div class="proj__links"><a href="https://github.com/Tejasprof84/Cat-vs-Dog-Image-Classification-using-Transfer-Learning" target="_blank" rel="noopener" data-snap>Code ↗</a><a class="live" href="https://cat-vs-dog-image-classification-using-transfer-learning-3v5de8.streamlit.app/" target="_blank" rel="noopener" data-snap>Live demo ↗</a><a href="https://hub.docker.com/r/tejas8484/catdog" target="_blank" rel="noopener" data-snap>Docker ↗</a></div>
+          </div>
+        </article>
+
+        <article class="proj pane" data-tilt data-snap="frame">
+          <div class="proj__viz viz-yolo" aria-hidden="true"><svg viewBox="0 0 300 150"><g class="grid"><path d="M60 0V150M120 0V150M180 0V150M240 0V150M0 50H300M0 100H300"/></g><rect class="obj" x="40" y="70" width="80" height="44" rx="10"/><circle class="obj" cx="190" cy="52" r="14"/><rect class="obj" x="176" y="68" width="28" height="56" rx="8"/><g class="box b1"><rect x="32" y="62" width="96" height="60"/><rect class="lab" x="32" y="48" width="62" height="14"/><text x="36" y="59" class="mono small dark">car 0.93</text></g><g class="box b2"><rect x="168" y="32" width="44" height="100"/><rect class="lab" x="168" y="18" width="74" height="14"/><text x="172" y="29" class="mono small dark">person 0.91</text></g><rect class="sweep" x="0" y="0" width="40" height="150"/></svg></div>
+          <div class="proj__body">
+            <p class="proj__type mono">06 · Computer Vision</p>
+            <h3>YOLO Object Detection</h3>
+            <p>Detection &amp; localisation with <b>Ultralytics YOLO11n</b> — bounding boxes, class IDs and confidence scores rendered with OpenCV. Now extending it with <b>IoU, NMS and mAP</b> evaluation.</p>
+            <div class="tags"><span>PyTorch</span><span>Ultralytics</span><span>OpenCV</span></div>
+            <div class="proj__links"><a href="https://github.com/Tejasprof84/yolo16_object_detection" target="_blank" rel="noopener" data-snap>Code ↗</a></div>
           </div>
         </article>
       </div>
-      <p class="note">Project-specific repository and live-demo links can be replaced with their exact URLs when available.</p>
-    </section>
 
-    <section id="experience" class="section dark-section">
-      <div class="section-label">04 / EXPERIENCE</div>
-      <div class="timeline">
-        <div class="timeline-item">
-          <div class="timeline-date">NOV 2025 — PRESENT</div>
-          <div>
-            <h3>AI Engineer Intern</h3>
-            <p class="company">Datamites</p>
-            <ul>
-              <li>Designed and deployed a RAG-based document search and Q&A system using LangChain, Pinecone and FAISS.</li>
-              <li>Applied structured preprocessing, feature engineering and model evaluation across ML, DL, NLP, CV and GenAI projects.</li>
-              <li>Maintained version-controlled development using Git and GitHub.</li>
-            </ul>
+      <details class="more pane" data-reveal>
+        <summary data-snap><span class="mono acc">+</span> More projects <span class="mono">5</span></summary>
+        <div class="more__list">
+          <a href="https://github.com/Tejasprof84/RAG_ocr_project" target="_blank" rel="noopener" data-snap><b>RAG + OCR Document QA</b><span>Q&amp;A over scanned documents using OCR + RAG</span><em class="mono">OCR · RAG</em></a>
+          <a href="https://github.com/Tejasprof84/LoanApprovalWebAppPrediction" target="_blank" rel="noopener" data-snap><b>Loan Approval Web App</b><span>Predicts loan-approval probability</span><em class="mono">Flask · sklearn</em></a>
+          <a href="https://github.com/Tejasprof84/spam_message_detector_Nav_bayes_" target="_blank" rel="noopener" data-snap><b>Spam Message Detector</b><span>Classifies SMS as spam / ham</span><em class="mono">Naive Bayes · NLP</em></a>
+          <a href="https://github.com/Tejasprof84/HousepricePrdeiction" target="_blank" rel="noopener" data-snap><b>House Price Prediction</b><span>Regression model for house prices</span><em class="mono">sklearn · Pandas</em></a>
+          <a href="https://github.com/Tejasprof84?tab=repositories" target="_blank" rel="noopener" data-snap><b>Flight Fare Prediction</b><span>Linear, Tree, RF &amp; XGBoost compared on R², MAE, RMSE with CV</span><em class="mono">XGBoost · Streamlit</em></a>
+        </div>
+      </details>
+
+      <div class="models">
+        <figure class="pane" data-reveal><img src="assets/neural-network.svg" alt="Animated neural network forward pass" loading="lazy"><figcaption class="mono">Neural network · forward pass</figcaption></figure>
+        <figure class="pane" data-reveal><img src="assets/cv-detection.svg" alt="Object detection with non-max suppression" loading="lazy"><figcaption class="mono">Detection · candidates → NMS → result</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════ JOURNEY ════════════ -->
+  <section id="experience">
+    <div class="wrap">
+      <p class="eyebrow" data-scramble>05 / Journey</p>
+      <h2 class="h-section" data-scramble-block>Training <em>log</em>.</h2>
+      <div class="log" id="log">
+        <div class="log__row" data-reveal><i class="node"></i>
+          <div class="log__when mono"><b>Nov 2025 — Present</b>current epoch</div>
+          <div class="log__what"><h4>AI Engineer Intern</h4><span class="mono">Datamites · Bengaluru</span></div>
+          <ul class="log__desc"><li>Designed and deployed a <b>RAG-based document search &amp; Q&amp;A system</b> using LangChain, Pinecone and FAISS.</li><li>Structured preprocessing, feature engineering and evaluation across ML, DL, NLP, CV and GenAI projects.</li><li>Version-controlled development with Git and GitHub.</li></ul>
+        </div>
+        <div class="log__row" data-reveal><i class="node"></i>
+          <div class="log__when mono"><b>2019 — 2023</b>B.E.</div>
+          <div class="log__what"><h4>B.E. Computer Science</h4><span class="mono">Sri Krishna Institute of Technology, Bangalore</span></div>
+          <p class="log__desc">Graduated with <b>CGPA 8.3</b>.</p>
+        </div>
+        <div class="log__row" data-reveal><i class="node"></i>
+          <div class="log__when mono"><b>2022</b>2 months</div>
+          <div class="log__what"><h4>Software Engineering Trainee</h4><span class="mono">Inventeron Technologies</span></div>
+          <p class="log__desc">Two-month internship during engineering.</p>
+        </div>
+        <div class="log__row" data-reveal><i class="node"></i>
+          <div class="log__when mono"><b>2016 — 2018</b>PUC</div>
+          <div class="log__what"><h4>Pre-University Course</h4><span class="mono">Ramaiah Composite PU College, Bangalore</span></div>
+          <p class="log__desc">73%</p>
+        </div>
+        <div class="log__row" data-reveal><i class="node"></i>
+          <div class="log__when mono"><b>2010 — 2015</b>SSLC</div>
+          <div class="log__what"><h4>SSLC (CBSE)</h4><span class="mono">Shree Ram Public School, Bangalore</span></div>
+          <p class="log__desc">CGPA 8.8</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════ CONTACT ════════════ -->
+  <section id="contact">
+    <div class="wrap">
+      <p class="eyebrow" data-scramble>06 / Contact</p>
+      <h2 class="h-section" data-scramble-block>Let's build something<br><em>useful</em> with AI.</h2>
+      <div class="terminal pane" data-reveal>
+        <div class="terminal__bar mono"><i></i><i></i><i></i><span>tejas@portfolio:~/contact</span></div>
+        <div class="terminal__body">
+          <div class="terminal__log mono" id="termLog" aria-live="polite"></div>
+          <div class="terminal__actions">
+            <a class="confirm" href="mailto:tejasprof84@gmail.com?subject=Opportunity%20for%20Tejas%20Kumar%20S" data-magnetic data-snap><span>Email me<small>tejasprof84@gmail.com</small></span><span class="confirm__key">[ ENTER ]</span></a>
+            <div class="alt-links">
+              <a class="btn" href="https://www.linkedin.com/in/tejas-kumar-tech" target="_blank" rel="noopener" data-magnetic data-snap><span class="btn__label">LinkedIn</span><span class="btn__arrow">→</span></a>
+              <a class="btn" href="https://github.com/Tejasprof84" target="_blank" rel="noopener" data-magnetic data-snap><span class="btn__label">GitHub</span><span class="btn__arrow">→</span></a>
+              <a class="btn" href="tel:+918904021553" data-magnetic data-snap><span class="btn__label">+91 89040 21553</span><span class="btn__arrow">→</span></a>
+              <a class="btn" href="Tejas_kumar_resume_v8-1.pdf" download data-magnetic data-snap><span class="btn__label">Résumé PDF</span><span class="btn__arrow">↓</span></a>
+            </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
+</main>
 
-    <section id="education" class="section">
-      <div class="section-label">05 / EDUCATION</div>
-      <div class="education-list">
-        <div class="education-item">
-          <span>2019 — 2023</span>
-          <div><h3>Bachelor of Engineering, Computer Science</h3><p>Sri Krishna Institute of Technology, Bangalore · CGPA: 8.3</p></div>
-        </div>
-        <div class="education-item">
-          <span>2016 — 2018</span>
-          <div><h3>Pre-University Course</h3><p>Ramaiah Composite Pre-University College, Bangalore · 73%</p></div>
-        </div>
-        <div class="education-item">
-          <span>2010 — 2015</span>
-          <div><h3>SSLC (CBSE)</h3><p>Shree Ram Public School, Bangalore · CGPA: 8.8</p></div>
-        </div>
-      </div>
-    </section>
+<footer class="site">
+  <div class="wrap">
+    <div class="footer__big" aria-hidden="true">Tejas Kumar S</div>
+    <div class="footer__row mono"><span>© <span id="yr"></span> Tejas Kumar S</span><span>Retrieve · Measure · Ship</span><a href="#top" data-snap>Back to top ↑</a></div>
+  </div>
+</footer>
 
-    <section id="contact" class="section contact-section">
-      <div class="section-label">06 / CONTACT</div>
-      <h2>Let’s build something<br><span>useful with AI.</span></h2>
-      <p>Interested in AI/ML, Generative AI, RAG or computer vision opportunities?</p>
-      <a class="email-link" href="mailto:tejasprof84@gmail.com">tejasprof84@gmail.com ↗</a>
-      <div class="contact-links">
-        <a href="tel:+918904021553">+91 8904021553</a>
-        <a href="https://www.linkedin.com/in/tejas-kumar-tech" target="_blank">LinkedIn ↗</a>
-        <a href="https://github.com/Tejasprof84" target="_blank">GitHub ↗</a>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <span>© 2026 Tejas Kumar</span>
-    <span>AI/ML Engineer</span>
-  </footer>
-
-  <script src="script.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+<script src="script.js" defer></script>
 </body>
 </html>
